@@ -6,8 +6,13 @@ import User from "@/models/User";
 
 export async function POST(req: Request) {
   try {
-    await dbConnect();
-    const { email, password } = await req.json();
+    await dbConnect().catch((err) => {
+      console.error("Database Connection Error:", err);
+      return NextResponse.json({ error: "Database Connection Failed" }, { status: 500 });
+    });
+
+    const body = await req.json();
+    const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
@@ -23,13 +28,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
+    // Ensure JWT secret exists
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error("JWT_SECRET is missing in environment variables");
+      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+    }
+
     // Generate JWT token
-    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET!, {
-      expiresIn: "7d", // Token expiry
-    });
+    const token = jwt.sign({ id: user._id, email: user.email }, secret, { expiresIn: "7d" });
 
     return NextResponse.json({ token, user: { id: user._id, email: user.email, name: user.name } });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("Login Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

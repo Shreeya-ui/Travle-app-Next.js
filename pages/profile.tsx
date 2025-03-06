@@ -1,88 +1,65 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import axios from "axios";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+interface Booking {
+  _id: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  travelers: number;
+}
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      alert("Email and password are required!");
-      return;
-    }
+const ProfilePage = () => {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    try {
-      setLoading(true);
-      const response = await axios.post("/api/auth/login", { email, password });
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          setError("User not logged in");
+          setLoading(false);
+          return;
+        }
 
-      // ✅ Store token & email in localStorage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("userEmail", response.data.email);
+        const response = await axios.get(`/api/bookings?userId=${userId}`);
+        setBookings(response.data);
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+        setError("Failed to load bookings.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      console.log("✅ Login Successful - Token & Email Stored:", response.data);
-
-      // ✅ Redirect to SearchBox Page instead of Profile
-      router.push("/");
-    } catch (error: any) {
-      alert(error.response?.data?.message || "Login failed");
-      console.error("❌ Login Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchBookings();
+  }, []);
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center"
-      style={{
-        backgroundImage: "url('/images/travle.avif')",
-        backgroundSize: "cover",
-        height: "100vh",
-      }}
-    >
-      <div className="absolute inset-0 bg-black opacity-60"></div>
-      <form
-        onSubmit={handleLogin}
-        className="relative z-10 bg-white p-8 rounded-xl shadow-lg w-full max-w-md"
-      >
-        <h1 className="text-3xl font-bold text-gray-800 text-center mb-6">Login</h1>
-        <input
-          type="email"
-          placeholder="Email"
-          className="block w-full p-4 mb-4 border border-gray-300 rounded-lg text-lg"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="block w-full p-4 mb-4 border border-gray-300 rounded-lg text-lg"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg text-lg"
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
-            Don’t have an account?{" "}
-            <a href="/register" className="text-blue-600 hover:underline">
-              Register
-            </a>
-          </p>
-        </div>
-      </form>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">Your Bookings</h1>
+
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
+      {!loading && !error && bookings.length === 0 && (
+        <p>No bookings found. <Link href="/book" className="text-blue-500 underline">Book now</Link>.</p>
+      )}
+
+      <ul className="space-y-4">
+        {bookings.map((booking) => (
+          <li key={booking._id} className="p-4 border rounded shadow">
+            <h2 className="font-semibold">{booking.location}</h2>
+            <p>From: {booking.startDate} - To: {booking.endDate}</p>
+            <p>Travelers: {booking.travelers}</p>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
 
-export default Login;
+export default ProfilePage;

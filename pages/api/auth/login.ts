@@ -42,8 +42,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sendEmail(email, "Login Notification", "login-notification", { name: user.name });
 
     res.status(200).json({ message: "Login successful", token, email: user.email });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Login Error:", error);
-    res.status(500).json({ error: error.message || "Internal Server Error" });
+
+    let errorMessage = "Internal Server Error";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    res.status(500).json({ error: errorMessage });
   }
 }

@@ -1,24 +1,33 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import jwt from "jsonwebtoken";
+import { NextRequest, NextResponse } from "next/server";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import connectDB from "@/utils/dbConnect";
 import Booking from "@/models/Booking";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") return res.status(405).json({ message: "Method Not Allowed" });
-
+// ✅ Ensure this is an async function
+export const POST = async (req: NextRequest) => {
   await connectDB();
 
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ message: "Unauthorized - No token provided" }, { status: 401 });
+    }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET_KEY!);
-    if (!decoded?.email) return res.status(401).json({ message: "Invalid token" });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as JwtPayload;
 
-    const { location, startDate, endDate, travelers } = req.body;
+    if (!decoded?.email) {
+      return NextResponse.json({ message: "Invalid token" }, { status: 401 });
+    }
+
+    const { location, startDate, endDate, travelers } = await req.json();
+
+    if (!location || !startDate || !endDate || !travelers) {
+      return NextResponse.json({ message: "All fields are required" }, { status: 400 });
+    }
 
     const newBooking = new Booking({
-      userEmail: decoded.email, // ✅ Store user email in booking
+      userEmail: decoded.email,
       location,
       startDate,
       endDate,
@@ -26,9 +35,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     await newBooking.save();
-    res.status(201).json({ message: "Booking successful", booking: newBooking });
+
+    return NextResponse.json({ message: "Booking successful", booking: newBooking }, { status: 201 });
   } catch (error) {
     console.error("Booking Error:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
-}
+};

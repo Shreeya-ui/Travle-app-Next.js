@@ -1,48 +1,64 @@
-import { useState } from 'react';
-import axios from 'axios';
+import { useState } from "react";
+import axios from "axios";
 
 const BookingForm = () => {
-  const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [travelers, setTravelers] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem('userId'); // Ensure userId is stored in localStorage upon login
+    const formData = new FormData(e.currentTarget);
+    const userId = localStorage.getItem("userId");
 
     if (!userId) {
-      alert('User not logged in');
+      alert("User not logged in");
       return;
     }
 
+    const bookingData = {
+      userId,
+      location: formData.get("location") as string,
+      startDate: formData.get("startDate") as string,
+      endDate: formData.get("endDate") as string,
+      travelers: Number(formData.get("travelers")),
+    };
+
     try {
       setLoading(true);
-      await axios.post('/api/bookings', {
-        userId,
-        location,
-        startDate,
-        endDate,
-        travelers,
-      });
-
-      alert('Booking saved successfully');
-      // Reset form or redirect as needed
-    } catch (error: any) {
-      console.error('Error saving booking:', error);
-      alert('Failed to save booking');
+      await axios.post("/api/bookings", bookingData);
+      alert("Booking saved successfully");
+    } catch (error) {
+      console.error("Error saving booking:", error);
+      alert("Failed to save booking");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Input fields for location, startDate, endDate, travelers */}
-      <button type="submit" disabled={loading}>
-        {loading ? 'Saving...' : 'Save Booking'}
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded">
+      <div>
+        <label className="block">Location:</label>
+        <input name="location" type="text" className="border p-2 rounded w-full" required />
+      </div>
+
+      <div>
+        <label className="block">Start Date:</label>
+        <input name="startDate" type="date" className="border p-2 rounded w-full" required />
+      </div>
+
+      <div>
+        <label className="block">End Date:</label>
+        <input name="endDate" type="date" className="border p-2 rounded w-full" required />
+      </div>
+
+      <div>
+        <label className="block">Number of Travelers:</label>
+        <input name="travelers" type="number" min="1" className="border p-2 rounded w-full" required />
+      </div>
+
+      <button type="submit" disabled={loading} className="bg-blue-500 text-white px-4 py-2 rounded">
+        {loading ? "Saving..." : "Save Booking"}
       </button>
     </form>
   );
