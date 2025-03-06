@@ -18,16 +18,13 @@ const SearchBox = () => {
     const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
+    } else {
+      // Redirect to login page if not authenticated
+      router.push("/login");
     }
-  }, []);
+  }, [router]);
 
   const handleSearch = () => {
-    if (!isLoggedIn) {
-      alert("Please log in to search for destinations.");
-      router.push("/login");
-      return;
-    }
-
     if (!location || !startDate || !endDate || !travelers) {
       alert("Please fill in all fields.");
       return;
@@ -37,6 +34,11 @@ const SearchBox = () => {
       `/search?location=${location}&startDate=${startDate}&endDate=${endDate}&travelers=${travelers}`
     );
   };
+
+  // Render nothing or a loading indicator while checking authentication
+  if (!isLoggedIn) {
+    return null; // or a loading spinner
+  }
 
   return (
     <div className="bg-white rounded-lg p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-center gap-8 mt-4 sm:mt-12 w-[95%] sm:w-[80%] mx-auto">

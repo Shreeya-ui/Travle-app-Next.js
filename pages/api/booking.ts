@@ -1,43 +1,43 @@
+// pages/api/bookings.ts
 import { NextApiRequest, NextApiResponse } from "next";
-import jwt from "jsonwebtoken";
-import dbConnect from "@/utils/dbConnect";
+import mongoose from "mongoose";
 import Booking from "@/models/Booking";
-import User from "@/models/User";
+import connectDB from "@/utils/dbConnect";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method Not Allowed" });
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  await dbConnect();
+  const { userId, location, startDate, endDate, travelers } = req.body;
+
+  if (!userId || !location || !startDate || !endDate || !travelers) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
 
   try {
-    // Get token from headers
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res.status(401).json({ message: "Unauthorized" });
+    await connectDB();
+
+    const newBooking = new Booking({
+      userId: new mongoose.Types.ObjectId(userId),
+      location,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      travelers,
+    });
+
+    const savedBooking = await newBooking.save();
+
+    res.status(201).json({ message: "Booking saved successfully", booking: savedBooking });
+  } catch (error: unknown) {
+    console.error("Error saving booking:", error);
+
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
     }
-
-    // Decode token
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET_KEY!);
-    if (!decoded?.id) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-
-    // Get booking details
-    const { location, startDate, endDate, travelers } = req.body;
-    const userId = decoded.id;
-
-    // Create a new booking
-    const newBooking = new Booking({ userId, location, startDate, endDate, travelers });
-    await newBooking.save();
-
-    // Add booking to user’s profile
-    await User.findByIdAndUpdate(userId, { $push: { bookings: newBooking._id } });
-
-    res.status(201).json({ message: "Booking successful", booking: newBooking });
-  } catch (error) {
-    console.error("Error storing booking:", error);
-    res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};
+
+export default handler;

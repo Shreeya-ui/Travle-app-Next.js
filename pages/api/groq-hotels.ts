@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { location, numPeople, numDays } = req.body;
 
   try {
-    // Fetch hotel details (simulate this using Groq)
+    // Fetch hotel details from Groq API
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
@@ -24,7 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const hotelDetails = chatCompletion.choices[0]?.message?.content || "No hotels available.";
-    // Mock hotel pricing info (replace this with dynamic content if possible)
+
+    // Mock hotel pricing info
     const hotels = [
       { name: "Hotel Grand", pricePerNight: 100 },
       { name: "City View Inn", pricePerNight: 80 },
@@ -37,7 +38,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       totalPrice: hotel.pricePerNight * numPeople * numDays,
     }));
 
-    res.status(200).json({ hotels: hotelsWithPrice });
+    // ✅ Include Groq API response in the response
+    res.status(200).json({ hotels: hotelsWithPrice, groqHotels: hotelDetails });
   } catch (error) {
     console.error("Error fetching Groq completion:", error);
     res.status(500).json({ error: "Failed to fetch hotel details." });

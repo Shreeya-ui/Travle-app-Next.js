@@ -3,6 +3,11 @@ import jwt from "jsonwebtoken";
 import connectDB from "@/utils/dbConnect";
 import User from "../../models/User";
 
+interface DecodedToken {
+  id: string;
+  email: string;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method Not Allowed" });
@@ -14,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET_KEY!);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY!) as DecodedToken;
     if (!decoded?.id) return res.status(401).json({ message: "Invalid token" });
 
     const user = await User.findById(decoded.id).select("name email");

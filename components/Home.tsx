@@ -1,6 +1,6 @@
 import React from 'react';
 import Hero from './Home/Hero/page';
-import Destination from './Home/Destination/Destination';
+import Destination from './Home/Destination/Destionation';
 
 
 const Home = () => {

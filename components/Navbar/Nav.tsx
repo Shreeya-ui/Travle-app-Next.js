@@ -10,18 +10,17 @@ import { useRouter } from "next/navigation";
 interface NavProps {
   setShowNav: (value: boolean) => void;
   isLoggedIn: boolean;
+  userName: string | null;
 }
 
-const Nav: React.FC<NavProps> = ({ setShowNav, isLoggedIn }) => {
+const Nav: React.FC<NavProps> = ({ setShowNav, isLoggedIn, userName }) => {
   const [navBg, setNavBg] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
-    const handler = () => {
-      setNavBg(window.scrollY >= 90);
-    };
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
+    const handleScroll = () => setNavBg(window.scrollY >= 90);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleLogout = async () => {
@@ -34,7 +33,8 @@ const Nav: React.FC<NavProps> = ({ setShowNav, isLoggedIn }) => {
   };
 
   return (
-    <div className={`$ {navBg ? "bg-blue-950 shadow-md" : "fixed"} transition-all duration-200 h-[12vh] z-[1000] fixed w-full flex items-center justify-center`}>
+    <div className={`transition-all duration-200 h-[12vh] z-[1000] w-full flex items-center justify-center 
+      ${navBg ? "bg-blue-950 shadow-md fixed" : "fixed"}`}>
       <div className="flex items-center justify-between w-[90%] xl:mx-auto">
         <div className="flex items-center space-x-2">
           <div className="w-18 h-18 bg-rose-500 rounded-full flex items-center justify-center">
@@ -42,7 +42,6 @@ const Nav: React.FC<NavProps> = ({ setShowNav, isLoggedIn }) => {
           </div>
           <h1 className="text-xl md:text-2xl text-white uppercase font-bold">Tripi</h1>
         </div>
-
         <div className="hidden lg:flex items-center space-x-10">
           {navlinks.map((link) => (
             <Link key={link.id} href={link.url}>
@@ -50,14 +49,18 @@ const Nav: React.FC<NavProps> = ({ setShowNav, isLoggedIn }) => {
             </Link>
           ))}
         </div>
-
         <div className="flex items-center space-x-4">
           {isLoggedIn ? (
             <>
               <Link href="/profile">
-                <FaUserCircle className="text-white w-8 h-8 cursor-pointer" />
+                <div className="flex items-center space-x-2 cursor-pointer">
+                  <FaUserCircle className="text-white w-8 h-8" />
+                  <span className="text-white text-base">{userName || "User"}</span>
+                </div>
               </Link>
-              <button onClick={handleLogout} className="px-8 py-2 text-black bg-white rounded-lg">Logout</button>
+              <button onClick={handleLogout} className="px-8 py-2 text-black bg-white rounded-lg">
+                Logout
+              </button>
             </>
           ) : (
             <Link href="/login">

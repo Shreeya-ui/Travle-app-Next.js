@@ -1,11 +1,19 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Model, Schema } from 'mongoose';
 
-const UserSchema = new mongoose.Schema({
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  role: 'user' | 'admin';
+}
+
+const userSchema = new Schema<IUser>({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  bookings: [{ type: mongoose.Schema.Types.ObjectId, ref: "Booking" }], // Reference to bookings
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
 });
 
-const User = mongoose.models.User || mongoose.model("User", UserSchema);
+const User: Model<IUser> = mongoose.models.User || mongoose.model('User', userSchema);
+
 export default User;

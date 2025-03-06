@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import Link from "next/link"; // ✅ Import Link from next/link
 import { useRouter } from "next/router";
 
 const Register = () => {
@@ -26,8 +27,15 @@ const Register = () => {
       const response = await axios.post("/api/auth/register", { email, password, name });
       alert(`✅ ${response.data.message}`);
       router.push("/login");
-    } catch (error: any) {
-      alert(error.response?.data?.message || "❌ Registration failed");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.message || "❌ Registration failed");
+      } else if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("An unexpected error occurred");
+      }
+      console.error("❌ Registration Error:", error);
     } finally {
       setLoading(false);
     }
@@ -93,9 +101,9 @@ const Register = () => {
         <div className="text-center">
           <p className="text-base text-gray-700">
             Already have an account?{" "}
-            <a href="/login" className="text-green-600 font-semibold hover:underline">
+            <Link href="/login" className="text-green-600 font-semibold hover:underline">
               Login
-            </a>
+            </Link>
           </p>
         </div>
       </form>

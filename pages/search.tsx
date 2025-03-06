@@ -2,13 +2,19 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+interface Hotel {
+  name: string;
+  pricePerNight: number;
+  totalPrice: number;
+}
+
 const SearchPage = () => {
   const router = useRouter();
   const { location } = router.query;
 
   const [numPeople, setNumPeople] = useState(1);
   const [numDays, setNumDays] = useState(1);
-  const [hotels, setHotels] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]); // ✅ Proper type for hotels
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
@@ -42,13 +48,17 @@ const SearchPage = () => {
   return (
     <div
       className="min-h-screen p-8 bg-cover bg-center"
-      style={{ backgroundImage: "url('/images/search1.jpg')", // Set your background image path here
-        backgroundSize: 'cover', // Ensure the image covers the whole screen
-        backgroundPosition: 'center', // Center the background image
-        height: '100vh', }}
+      style={{
+        backgroundImage: "url('/images/search1.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        height: "100vh",
+      }}
     >
       <div className="bg-white bg-opacity-80 p-8 rounded-lg">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Hotels in "{location}"</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+          Hotels in &quot;{location}&quot; {/* ✅ Escaped double quotes */}
+        </h1>
 
         <div className="mb-4">
           <label className="block font-semibold">Number of People:</label>

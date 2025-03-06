@@ -1,28 +1,34 @@
-import { NextResponse } from "next/server";
-import dbConnect from "@/utils/dbConnect";
-import User from "../../../models/User";
+import { NextApiRequest, NextApiResponse } from "next";
+import jwt from "jsonwebtoken";
+import connectDB from "@/utils/dbConnect";
+import Booking from "@/models/Booking";
 
-export async function POST(req: Request) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).json({ message: "Method Not Allowed" });
+
+  await connectDB();
+
   try {
-    await dbConnect();
-    const { userId, location, startDate, endDate, travelers } = await req.json();
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
 
-    if (!userId || !location || !startDate || !endDate || !travelers) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
-    }
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET_KEY!);
+    if (!decoded?.email) return res.status(401).json({ message: "Invalid token" });
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const { location, startDate, endDate, travelers } = req.body;
 
-    // Add new booking to user's bookings array
-    user.bookings.push({ location, startDate, endDate, travelers });
-    await user.save();
+    const newBooking = new Booking({
+      userEmail: decoded.email, // ✅ Store user email in booking
+      location,
+      startDate,
+      endDate,
+      travelers,
+    });
 
-    return NextResponse.json({ message: "Booking saved successfully" }, { status: 201 });
+    await newBooking.save();
+    res.status(201).json({ message: "Booking successful", booking: newBooking });
   } catch (error) {
-    console.error("Error saving booking:", error);
-    return NextResponse.json({ error: "Failed to save booking" }, { status: 500 });
+    console.error("Booking Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
