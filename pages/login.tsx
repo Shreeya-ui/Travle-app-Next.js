@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // ✅ Import Link from next/link
+import Link from "next/link";
 import axios from "axios";
-import { FiMail, FiLock } from "react-icons/fi"; // Import icons
+import { FiMail, FiLock } from "react-icons/fi";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,10 +14,7 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      alert("Email and password are required!");
-      return;
-    }
+    if (!email || !password || loading) return;
 
     try {
       setLoading(true);
@@ -32,13 +29,11 @@ const Login = () => {
       // Redirect to SearchBox Page
       router.push("/SearchBox");
     } catch (error) {
+      let errorMessage = "Login failed. Please try again.";
       if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.message || "Login failed");
-      } else if (error instanceof Error) {
-        alert(error.message);
-      } else {
-        alert("An unexpected error occurred");
+        errorMessage = error.response?.data?.error || errorMessage;
       }
+      alert(errorMessage);
       console.error("❌ Login Error:", error);
     } finally {
       setLoading(false);

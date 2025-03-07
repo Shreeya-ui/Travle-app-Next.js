@@ -1,0 +1,8 @@
+{
+    "functions": {
+      "api/auth/login": { "maxDuration": 10 },
+      "api/auth/register": { "maxDuration": 10 },
+      "api/book-ticket": { "maxDuration": 10 }
+    }
+  }
+  

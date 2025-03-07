@@ -16,21 +16,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    console.log("⏳ Connecting to database...");
     await connectDB();
 
-    // Find user
+    console.log("🔍 Finding user...");
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Compare password
+    console.log("🔑 Verifying password...");
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Generate JWT token
+    console.log("🔑 Generating JWT token...");
     const secretKey = process.env.JWT_SECRET_KEY;
     if (!secretKey) {
       return res.status(500).json({ error: "Internal server error" });
@@ -38,12 +39,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const token = jwt.sign({ email: user.email, id: user._id }, secretKey, { expiresIn: "1h" });
 
-    // Send email notification (optional)
+    console.log("📧 Sending login notification email...");
     await sendEmail(email, "Login Notification", "login-notification", { name: user.name });
 
+    console.log("✅ Login successful.");
     res.status(200).json({ message: "Login successful", token, email: user.email });
   } catch (error: unknown) {
-    console.error("Login Error:", error);
+    console.error("❌ Login Error:", error);
 
     let errorMessage = "Internal Server Error";
     if (error instanceof Error) {
