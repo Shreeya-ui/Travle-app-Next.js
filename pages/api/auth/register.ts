@@ -5,14 +5,6 @@ import connectDB from "@/utils/dbConnect";
 import User from "@/models/User";
 import { sendEmail } from "@/utils/sendEmails";
 
-import { NextResponse } from "next/server";
-
-export async function GET(): Promise<NextResponse> {
-  return NextResponse.json({ message: "regiter API working" }, { status: 200 });
-}
-
-
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
