@@ -27,7 +27,7 @@ const Login = () => {
       console.log("✅ Login Successful - Token & Email Stored:", response.data);
 
       // Redirect to SearchBox Page
-      router.push("/SearchBox");
+      router.push("/");
     } catch (error) {
       let errorMessage = "Login failed. Please try again.";
       if (axios.isAxiosError(error)) {
