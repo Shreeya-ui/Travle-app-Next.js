@@ -2,7 +2,7 @@
 "use client"; // Ensure it's a client-side component
 
 import React, { useEffect, useState } from "react";
-import SearchBox from "@/pages/SearchBox";
+import SearchBox from "@/pages/SearchBox/page";
 import { decodeToken } from "../../../utils/decodeToken"; // Adjust this import path if needed
 
 const Hero = () => {
